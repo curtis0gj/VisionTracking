@@ -105,6 +105,7 @@ public class TowerTracker {
 	public static void processImage() {
 		ArrayList<MatOfPoint> contours = new ArrayList<MatOfPoint>();
 		double y, targetX, distance, azimuth;
+		int frames = 0;
 
 		contours.clear();
 		videoCapture.read(matOriginal);
@@ -142,10 +143,14 @@ public class TowerTracker {
 			table.putNumber("distance", distance);
 			table.putNumber("azimuth", azimuth);
 			System.out.println("Distance: " + distance + ", Azimuth: " + azimuth);
+
+			frames = 0;
 		} else {
-			table.putNumber("azimuth", -1);
-			table.putNumber("distance", 0);
-			System.out.println("Target Lost");
+			frames++;
+
+			if (frames > 15) {
+				System.out.println("Target Lost");
+			}
 		}
 	}
 
