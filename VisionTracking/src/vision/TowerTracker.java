@@ -1,58 +1,51 @@
 package vision;
 
-import java.sql.Blob;
 import java.util.ArrayList;
 import java.util.Iterator;
 
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
-import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
-import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.videoio.VideoCapture;
 
 import edu.wpi.first.wpilibj.networktables.NetworkTable;
 
 public class TowerTracker {
+	static NetworkTable table;
+
 	static {
 		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
-		NetworkTable.setClientMode();
-		NetworkTable.setIPAddress("roboRIO-5033-FRC.local");
-	}
 
-	static NetworkTable table;
+		NetworkTable.setClientMode();
+		NetworkTable.setIPAddress("10.50.33.75"); // roboRIO-5033-FRC.local
+		table = NetworkTable.getTable("SmartDashboard");
+	}
 
 	public static final Scalar RED = new Scalar(0, 0, 255), BLUE = new Scalar(255, 0, 0), GREEN = new Scalar(0, 255, 0),
 			BLACK = new Scalar(0, 0, 0), YELLOW = new Scalar(0, 255, 255),
 
 			LOWER_BOUNDS = new Scalar(62, 122, 75), UPPER_BOUNDS = new Scalar(108, 255, 150);
-	// 58, 0, 109 : 93, 255, 240 : 75
+
 	public static final Size resize = new Size(320, 240);
 
 	public static VideoCapture videoCapture;
 	public static Mat matOriginal, matHSV, matThresh, clusters, matHeirarchy;
 
 	public static final int TOP_TARGET_HEIGHT = 97;
-	// 12 inches on robot.
-	public static final int TOP_CAMERA_HEIGHT = 5;
+	public static final int TOP_CAMERA_HEIGHT = 5; // 12 inches on robot.
 	public static final double VERTICAL_FOV = 51;
 	public static final double HORIZONTAL_FOV = 67;
-	// 15 degrees on robot.
-	public static final double CAMERA_ANGLE = 30;
+	public static final double CAMERA_ANGLE = 30; // 15 degrees on robot.
 
 	public static boolean shouldRun = true;
 	long startTime = 0;
 	long endTime = 0;
 
 	public static void main(String[] args) {
-		NetworkTable.setClientMode();
-		// roborio-TEAM-frc.local
-		NetworkTable.setIPAddress("10.50.33.75");
-		table = NetworkTable.getTable("SmartDashboard");
 
 		while (!table.isConnected()) {
 			try {
@@ -69,7 +62,10 @@ public class TowerTracker {
 		clusters = new Mat();
 		matHeirarchy = new Mat();
 
-		videoCapture = new VideoCapture();
+		videoCapture = openVideoCapture();
+	}
+
+	private static VideoCapture openVideoCapture() {
 		videoCapture.open("http://10.50.33.29/mjpg/video.mjpg");
 		while (!videoCapture.isOpened()) {
 			try {
@@ -101,6 +97,7 @@ public class TowerTracker {
 		}
 		videoCapture.release();
 		System.exit(0);
+		return videoCapture;
 	}
 
 	public static void processImage() {
@@ -145,6 +142,7 @@ public class TowerTracker {
 			System.out.println("Distance: " + distance + ", Azimuth: " + azimuth);
 		} else {
 			table.putNumber("azimuth", -1);
+			table.putNumber("distance", 0);
 			System.out.println("Target Lost");
 		}
 	}
