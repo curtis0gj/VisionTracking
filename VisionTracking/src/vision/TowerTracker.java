@@ -15,15 +15,11 @@ import org.opencv.videoio.VideoCapture;
 import edu.wpi.first.wpilibj.networktables.NetworkTable;
 
 public class TowerTracker {
-	static NetworkTable table;
-
 	static {
 		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
-
-		NetworkTable.setClientMode();
-		NetworkTable.setIPAddress("10.50.33.75"); // roboRIO-5033-FRC.local
-		table = NetworkTable.getTable("SmartDashboard");
 	}
+
+	public static NetworkTable table;
 
 	public static final Scalar RED = new Scalar(0, 0, 255), BLUE = new Scalar(255, 0, 0), GREEN = new Scalar(0, 255, 0),
 			BLACK = new Scalar(0, 0, 0), YELLOW = new Scalar(0, 255, 255),
@@ -46,6 +42,7 @@ public class TowerTracker {
 	long endTime = 0;
 
 	public static void main(String[] args) {
+		initializeNetworkTables();
 
 		while (!table.isConnected()) {
 			try {
@@ -65,6 +62,12 @@ public class TowerTracker {
 		videoCapture = openVideoCapture();
 	}
 
+	private static void initializeNetworkTables() {
+		NetworkTable.setClientMode();
+		NetworkTable.setIPAddress("10.50.33.75"); // roboRIO-5033-FRC.local
+		table = NetworkTable.getTable("SmartDashboard");
+	}
+
 	private static VideoCapture openVideoCapture() {
 		videoCapture.open("http://10.50.33.29/mjpg/video.mjpg");
 		while (!videoCapture.isOpened()) {
@@ -75,7 +78,12 @@ public class TowerTracker {
 				Thread.currentThread().interrupt();
 			}
 		}
+		mainLoop();
 
+		return videoCapture;
+	}
+
+	private static void mainLoop() {
 		while (shouldRun) {
 			long startTime = System.currentTimeMillis();
 
@@ -96,13 +104,11 @@ public class TowerTracker {
 			}
 		}
 		videoCapture.release();
-		System.exit(0);
-		return videoCapture;
 	}
 
 	public static void processImage() {
 		ArrayList<MatOfPoint> contours = new ArrayList<MatOfPoint>();
-		double x, y, targetX, targetY, distance, azimuth;
+		double y, targetX, distance, azimuth;
 
 		contours.clear();
 		videoCapture.read(matOriginal);
