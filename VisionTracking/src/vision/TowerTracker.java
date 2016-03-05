@@ -48,9 +48,7 @@ public class TowerTracker {
 
 	public static void main(String[] args) {
 		initializeNetworkTables();
-
-		videoCapture = openVideoCapture();
-
+		openVideoCapture();
 		mainLoop();
 		videoCapture.release();
 	}
@@ -70,7 +68,7 @@ public class TowerTracker {
 		}
 	}
 
-	private static VideoCapture openVideoCapture() {
+	private static void openVideoCapture() {
 		videoCapture.open("http://10.50.33.29/mjpg/video.mjpg");
 		while (!videoCapture.isOpened()) {
 			try {
@@ -80,7 +78,6 @@ public class TowerTracker {
 				Thread.currentThread().interrupt();
 			}
 		}
-		return videoCapture;
 	}
 
 	private static void mainLoop() {
