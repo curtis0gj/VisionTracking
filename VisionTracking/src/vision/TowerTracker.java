@@ -29,7 +29,12 @@ public class TowerTracker {
 	public static final Size resize = new Size(320, 240);
 
 	public static VideoCapture videoCapture;
-	public static Mat matOriginal, matHSV, matThresh, clusters, matHeirarchy;
+
+	public static Mat matOriginal = new Mat();
+	public static Mat matHSV = new Mat();
+	public static Mat matThresh = new Mat();
+	public static Mat clusters = new Mat();
+	public static Mat matHeirarchy = new Mat();
 
 	public static final int TOP_TARGET_HEIGHT = 97;
 	public static final int TOP_CAMERA_HEIGHT = 5; // 12 inches on robot.
@@ -44,6 +49,17 @@ public class TowerTracker {
 	public static void main(String[] args) {
 		initializeNetworkTables();
 
+		videoCapture = openVideoCapture();
+
+		mainLoop();
+		videoCapture.release();
+	}
+
+	private static void initializeNetworkTables() {
+		NetworkTable.setClientMode();
+		NetworkTable.setIPAddress("10.50.33.75"); // roboRIO-5033-FRC.local
+		table = NetworkTable.getTable("SmartDashboard");
+
 		while (!table.isConnected()) {
 			try {
 				System.out.println("no network connection");
@@ -52,20 +68,6 @@ public class TowerTracker {
 				Thread.currentThread().interrupt();
 			}
 		}
-
-		matOriginal = new Mat();
-		matHSV = new Mat();
-		matThresh = new Mat();
-		clusters = new Mat();
-		matHeirarchy = new Mat();
-
-		videoCapture = openVideoCapture();
-	}
-
-	private static void initializeNetworkTables() {
-		NetworkTable.setClientMode();
-		NetworkTable.setIPAddress("10.50.33.75"); // roboRIO-5033-FRC.local
-		table = NetworkTable.getTable("SmartDashboard");
 	}
 
 	private static VideoCapture openVideoCapture() {
@@ -78,8 +80,6 @@ public class TowerTracker {
 				Thread.currentThread().interrupt();
 			}
 		}
-		mainLoop();
-
 		return videoCapture;
 	}
 
@@ -103,7 +103,6 @@ public class TowerTracker {
 				}
 			}
 		}
-		videoCapture.release();
 	}
 
 	public static void processImage() {
