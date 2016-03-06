@@ -140,6 +140,9 @@ public class TowerTracker {
 			targetX = (2 * (targetX / matOriginal.width())) - 1;
 			azimuth = normalize360(targetX * HORIZONTAL_FOV / 2.0 + 0);
 
+			table.putNumber("distance", distance);
+			table.putNumber("azimuth", azimuth);
+
 			String distanceAsString = Double.toString(distance);
 			String azimuthAsString = Double.toString(azimuth);
 
