@@ -37,10 +37,10 @@ public class TowerTracker {
 	public static Mat matHeirarchy = new Mat();
 
 	public static final int TOP_TARGET_HEIGHT = 97;
-	public static final int TOP_CAMERA_HEIGHT = 5; // 12 inches on robot.
+	public static final int TOP_CAMERA_HEIGHT = 5; // 12 inches on the robot.
 	public static final double VERTICAL_FOV = 51;
 	public static final double HORIZONTAL_FOV = 67;
-	public static final double CAMERA_ANGLE = 30; // 15 degrees on robot.
+	public static final double CAMERA_ANGLE = 30; // 15 degrees on the robot.
 
 	public static boolean shouldRun = true;
 	long startTime = 0;
@@ -55,7 +55,7 @@ public class TowerTracker {
 
 	private static void initializeNetworkTables() {
 		NetworkTable.setClientMode();
-		NetworkTable.setIPAddress("10.50.33.75"); // roboRIO-5033-FRC.local
+		NetworkTable.setIPAddress("roboRIO-5033-FRC.local"); // 10.50.33.75
 		table = NetworkTable.getTable("SmartDashboard");
 
 		while (!table.isConnected()) {
@@ -140,16 +140,22 @@ public class TowerTracker {
 			targetX = (2 * (targetX / matOriginal.width())) - 1;
 			azimuth = normalize360(targetX * HORIZONTAL_FOV / 2.0 + 0);
 
-			table.putNumber("distance", distance);
-			table.putNumber("azimuth", azimuth);
-			System.out.println("Distance: " + distance + ", Azimuth: " + azimuth);
+			String distanceAsString = Double.toString(distance);
+			String azimuthAsString = Double.toString(azimuth);
+
+			String visionData = distanceAsString + ":" + azimuthAsString;
+
+			table.putString("distance and azimuth", visionData);
+			System.out.println("Distance : Azimuth = " + visionData);
 
 			frames = 0;
 		} else {
 			frames++;
 
 			if (frames > 15) {
-				System.out.println("Target Lost");
+				String targetLost = "3.14:-1";
+				table.putString("distance and azimuth", targetLost);
+				System.out.println("Target Lost = " + targetLost);
 			}
 		}
 	}
