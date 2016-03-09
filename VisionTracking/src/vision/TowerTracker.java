@@ -48,6 +48,7 @@ public class TowerTracker {
 
 	public static void main(String[] args) {
 		initializeNetworkTables();
+		videoCapture = new VideoCapture();
 		openVideoCapture();
 		mainLoop();
 		videoCapture.release();
@@ -55,7 +56,7 @@ public class TowerTracker {
 
 	private static void initializeNetworkTables() {
 		NetworkTable.setClientMode();
-		NetworkTable.setIPAddress("roboRIO-5033-FRC.local"); // 10.50.33.75
+		NetworkTable.setIPAddress("10.50.33.75"); // 10.50.33.75
 		table = NetworkTable.getTable("SmartDashboard");
 
 		while (!table.isConnected()) {
