@@ -24,7 +24,7 @@ public class TowerTracker {
 	public static final Scalar RED = new Scalar(0, 0, 255), BLUE = new Scalar(255, 0, 0), GREEN = new Scalar(0, 255, 0),
 			BLACK = new Scalar(0, 0, 0), YELLOW = new Scalar(0, 255, 255),
 
-			LOWER_BOUNDS = new Scalar(62, 122, 75), UPPER_BOUNDS = new Scalar(108, 255, 150);
+			LOWER_BOUNDS = new Scalar(59, 80, 82), UPPER_BOUNDS = new Scalar(134, 190, 255);
 
 	public static final Size resize = new Size(320, 240);
 
@@ -45,7 +45,8 @@ public class TowerTracker {
 	public static boolean shouldRun = true;
 	long startTime = 0;
 	long endTime = 0;
-
+	public static int frames;
+	
 	public static void main(String[] args) {
 		initializeNetworkTables();
 		videoCapture = new VideoCapture();
@@ -56,7 +57,7 @@ public class TowerTracker {
 
 	private static void initializeNetworkTables() {
 		NetworkTable.setClientMode();
-		NetworkTable.setIPAddress("10.50.33.75"); // 10.50.33.75
+		NetworkTable.setIPAddress("10.50.33.75"); 
 		table = NetworkTable.getTable("SmartDashboard");
 
 		while (!table.isConnected()) {
@@ -95,7 +96,7 @@ public class TowerTracker {
 
 			if (endTime - startTime < 75) {
 				try {
-					Thread.sleep(100);
+					Thread.sleep(50);
 				} catch (InterruptedException ex) {
 					Thread.currentThread().interrupt();
 				}
@@ -106,8 +107,7 @@ public class TowerTracker {
 	public static void processImage() {
 		ArrayList<MatOfPoint> contours = new ArrayList<MatOfPoint>();
 		double y, targetX, distance, azimuth;
-		int frames = 0;
-
+	
 		contours.clear();
 		videoCapture.read(matOriginal);
 		Imgproc.cvtColor(matOriginal, matHSV, Imgproc.COLOR_BGR2HSV);
@@ -147,19 +147,18 @@ public class TowerTracker {
 			String distanceAsString = Double.toString(distance);
 			String azimuthAsString = Double.toString(azimuth);
 
-			String visionData = distanceAsString + ":" + azimuthAsString;
+			String smartDashBoardVisionData = distanceAsString + ":" + azimuthAsString;
 
-			table.putString("distance and azimuth", visionData);
-			System.out.println("Distance : Azimuth = " + visionData);
-
+			table.putString("distance and azimuth", smartDashBoardVisionData);
+			System.out.println("distance: " + distance + " azimuth: " + azimuth);
 			frames = 0;
 		} else {
-			frames++;
+			frames += 1;
 
-			if (frames > 15) {
+			if (frames > 2) {
 				String targetLost = "3.14:-1";
 				table.putString("distance and azimuth", targetLost);
-				System.out.println("Target Lost = " + targetLost);
+				System.out.println("target lost");
 			}
 		}
 	}
