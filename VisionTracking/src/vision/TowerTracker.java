@@ -155,7 +155,7 @@ public class TowerTracker {
 		} else {
 			frames += 1;
 
-			if (frames > 2) {
+			if (frames > 15) {
 				String targetLost = "3.14:-1";
 				table.putString("distance and azimuth", targetLost);
 				System.out.println("target lost");
