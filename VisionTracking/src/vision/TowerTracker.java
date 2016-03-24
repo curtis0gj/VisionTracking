@@ -24,7 +24,7 @@ public class TowerTracker {
 	public static final Scalar RED = new Scalar(0, 0, 255), BLUE = new Scalar(255, 0, 0), GREEN = new Scalar(0, 255, 0),
 			BLACK = new Scalar(0, 0, 0), YELLOW = new Scalar(0, 255, 255),
 
-			LOWER_BOUNDS = new Scalar(59, 80, 82), UPPER_BOUNDS = new Scalar(134, 190, 255);
+			LOWER_BOUNDS = new Scalar(58, 112, 73), UPPER_BOUNDS = new Scalar(97, 222, 218);
 
 	public static final Size resize = new Size(320, 240);
 
@@ -46,7 +46,7 @@ public class TowerTracker {
 	long startTime = 0;
 	long endTime = 0;
 	public static int frames;
-	
+
 	public static void main(String[] args) {
 		initializeNetworkTables();
 		videoCapture = new VideoCapture();
@@ -57,13 +57,13 @@ public class TowerTracker {
 
 	private static void initializeNetworkTables() {
 		NetworkTable.setClientMode();
-		NetworkTable.setIPAddress("10.50.33.75"); 
+		NetworkTable.setIPAddress("10.50.33.75");
 		table = NetworkTable.getTable("SmartDashboard");
 
 		while (!table.isConnected()) {
 			try {
 				System.out.println("no network connection");
-				Thread.sleep(500);
+				Thread.sleep(250);
 			} catch (InterruptedException ex) {
 				Thread.currentThread().interrupt();
 			}
@@ -72,10 +72,16 @@ public class TowerTracker {
 
 	private static void openVideoCapture() {
 		videoCapture.open("http://10.50.33.29/mjpg/video.mjpg");
+		// DAP 1522 Radio Static IP: 10.TE.AM.1
+		// roboRIO Static IP: 10.TE.AM.2 / Subnet mask: 255.255.255.0
+		// Driver Station Static IP: 10.TE.AM.5 / Subnet mask: 255.0.0.0
+		// IP Camera Static IP: 10.TE.AM.11 / Subnet mask: 255.255.255.0
+		// https://wpilib.screenstepslive.com/s/4485/m/24194/l/144985-configuring-an-axis-camera
+
 		while (!videoCapture.isOpened()) {
 			try {
 				System.out.println("no camera connection");
-				Thread.sleep(500);
+				Thread.sleep(250);
 			} catch (InterruptedException ex) {
 				Thread.currentThread().interrupt();
 			}
@@ -94,7 +100,7 @@ public class TowerTracker {
 			}
 			long endTime = System.currentTimeMillis();
 
-			if (endTime - startTime < 75) {
+			if (endTime - startTime < 38) {
 				try {
 					Thread.sleep(50);
 				} catch (InterruptedException ex) {
@@ -107,7 +113,7 @@ public class TowerTracker {
 	public static void processImage() {
 		ArrayList<MatOfPoint> contours = new ArrayList<MatOfPoint>();
 		double y, targetX, distance, azimuth;
-	
+
 		contours.clear();
 		videoCapture.read(matOriginal);
 		Imgproc.cvtColor(matOriginal, matHSV, Imgproc.COLOR_BGR2HSV);
@@ -155,9 +161,11 @@ public class TowerTracker {
 		} else {
 			frames += 1;
 
-			if (frames > 15) {
+			if (frames > 4) {
 				String targetLost = "3.14:-1";
 				table.putString("distance and azimuth", targetLost);
+				table.putNumber("distance", 0);
+				table.putNumber("azimuth", 0);
 				System.out.println("target lost");
 			}
 		}
