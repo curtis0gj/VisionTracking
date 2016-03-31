@@ -120,20 +120,21 @@ public class TowerTracker {
 		Core.inRange(matHSV, LOWER_BOUNDS, UPPER_BOUNDS, matThresh);
 		Imgproc.findContours(matThresh, contours, matHeirarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
 
+		for (MatOfPoint mop : contours) {
+			Rect rec = Imgproc.boundingRect(mop);
+			Imgproc.rectangle(matOriginal, rec.br(), rec.tl(), RED);
+		}
+
 		for (Iterator<MatOfPoint> iterator = contours.iterator(); iterator.hasNext();) {
 			MatOfPoint matOfPoint = (MatOfPoint) iterator.next();
 			Rect rec = Imgproc.boundingRect(matOfPoint);
-			if (rec.height < 25 || rec.width < 25) {
+			if (rec.height < 15 || rec.width < 15) {
 				iterator.remove();
 				continue;
 			}
 			float aspect = (float) rec.width / (float) rec.height;
 			if (aspect < 1.0)
 				iterator.remove();
-		}
-		for (MatOfPoint mop : contours) {
-			Rect rec = Imgproc.boundingRect(mop);
-			Imgproc.rectangle(matOriginal, rec.br(), rec.tl(), BLACK);
 		}
 
 		if (contours.size() == 1) {
@@ -156,6 +157,9 @@ public class TowerTracker {
 			String smartDashBoardVisionData = distanceAsString + ":" + azimuthAsString;
 
 			table.putString("distance and azimuth", smartDashBoardVisionData);
+
+			NetworkTable.flush();
+
 			System.out.println("distance: " + distance + " azimuth: " + azimuth);
 			frames = 0;
 		} else {
