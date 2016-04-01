@@ -20,11 +20,12 @@ public class TowerTracker {
 	}
 
 	public static NetworkTable table;
+	public static Boolean networkConnected = false;
 
 	public static final Scalar RED = new Scalar(0, 0, 255), BLUE = new Scalar(255, 0, 0), GREEN = new Scalar(0, 255, 0),
 			BLACK = new Scalar(0, 0, 0), YELLOW = new Scalar(0, 255, 255),
 
-			LOWER_BOUNDS = new Scalar(58, 112, 73), UPPER_BOUNDS = new Scalar(97, 222, 218);
+			LOWER_BOUNDS = new Scalar(71, 163, 170), UPPER_BOUNDS = new Scalar(112, 255, 255);
 
 	public static final Size resize = new Size(320, 240);
 
@@ -37,10 +38,10 @@ public class TowerTracker {
 	public static Mat matHeirarchy = new Mat();
 
 	public static final int TOP_TARGET_HEIGHT = 97;
-	public static final int TOP_CAMERA_HEIGHT = 5; // 12 inches on the robot.
+	public static final int TOP_CAMERA_HEIGHT = 12; // 12 inches on the robot.
 	public static final double VERTICAL_FOV = 51;
 	public static final double HORIZONTAL_FOV = 67;
-	public static final double CAMERA_ANGLE = 30; // 15 degrees on the robot.
+	public static final double CAMERA_ANGLE = 20; // 15 degrees on the robot.
 
 	public static boolean shouldRun = true;
 	long startTime = 0;
@@ -57,7 +58,7 @@ public class TowerTracker {
 
 	private static void initializeNetworkTables() {
 		NetworkTable.setClientMode();
-		NetworkTable.setIPAddress("10.50.33.75");
+		NetworkTable.setIPAddress("roborio-5033-frc.local");
 		table = NetworkTable.getTable("SmartDashboard");
 
 		while (!table.isConnected()) {
@@ -68,15 +69,11 @@ public class TowerTracker {
 				Thread.currentThread().interrupt();
 			}
 		}
+		networkConnected = true;
 	}
 
 	private static void openVideoCapture() {
-		videoCapture.open("http://10.50.33.29/mjpg/video.mjpg");
-		// DAP 1522 Radio Static IP: 10.TE.AM.1
-		// roboRIO Static IP: 10.TE.AM.2 / Subnet mask: 255.255.255.0
-		// Driver Station Static IP: 10.TE.AM.5 / Subnet mask: 255.0.0.0
-		// IP Camera Static IP: 10.TE.AM.11 / Subnet mask: 255.255.255.0
-		// https://wpilib.screenstepslive.com/s/4485/m/24194/l/144985-configuring-an-axis-camera
+		videoCapture.open("http://axis-camera.local/mjpg/video.mjpg");
 
 		while (!videoCapture.isOpened()) {
 			try {
@@ -116,6 +113,8 @@ public class TowerTracker {
 
 		contours.clear();
 		videoCapture.read(matOriginal);
+		// matOriginal = Imgcodecs.imread("C:\\Users\\Curtis
+		// Johnston\\Documents\\LabVIEW Data\\0.jpg");
 		Imgproc.cvtColor(matOriginal, matHSV, Imgproc.COLOR_BGR2HSV);
 		Core.inRange(matHSV, LOWER_BOUNDS, UPPER_BOUNDS, matThresh);
 		Imgproc.findContours(matThresh, contours, matHeirarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
@@ -133,8 +132,15 @@ public class TowerTracker {
 				continue;
 			}
 			float aspect = (float) rec.width / (float) rec.height;
-			if (aspect < 1.0)
+			if (aspect < 1.0) {
 				iterator.remove();
+				continue;
+			}
+
+			if (rec.y > 100) {
+				iterator.remove();
+				continue;
+			}
 		}
 
 		if (contours.size() == 1) {
@@ -148,17 +154,19 @@ public class TowerTracker {
 			targetX = (2 * (targetX / matOriginal.width())) - 1;
 			azimuth = normalize360(targetX * HORIZONTAL_FOV / 2.0 + 0);
 
-			table.putNumber("distance", distance);
-			table.putNumber("azimuth", azimuth);
-
 			String distanceAsString = Double.toString(distance);
 			String azimuthAsString = Double.toString(azimuth);
 
 			String smartDashBoardVisionData = distanceAsString + ":" + azimuthAsString;
 
-			table.putString("distance and azimuth", smartDashBoardVisionData);
+			if (networkConnected) {
+				table.putNumber("distance", distance);
+				table.putNumber("azimuth", azimuth);
 
-			NetworkTable.flush();
+				table.putString("distance and azimuth", smartDashBoardVisionData);
+
+				NetworkTable.flush();
+			}
 
 			System.out.println("distance: " + distance + " azimuth: " + azimuth);
 			frames = 0;
@@ -167,10 +175,14 @@ public class TowerTracker {
 
 			if (frames > 4) {
 				String targetLost = "3.14:-1";
-				table.putString("distance and azimuth", targetLost);
-				table.putNumber("distance", 0);
-				table.putNumber("azimuth", 0);
+				if (networkConnected) {
+					table.putString("distance and azimuth", targetLost);
+					table.putNumber("distance", 0);
+					table.putNumber("azimuth", 0);
+				}
 				System.out.println("target lost");
+			} else {
+				System.out.println("frames " + frames);
 			}
 		}
 	}
