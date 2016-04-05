@@ -25,7 +25,7 @@ public class TowerTracker {
 	public static final Scalar RED = new Scalar(0, 0, 255), BLUE = new Scalar(255, 0, 0), GREEN = new Scalar(0, 255, 0),
 			BLACK = new Scalar(0, 0, 0), YELLOW = new Scalar(0, 255, 255),
 
-			LOWER_BOUNDS = new Scalar(71, 163, 170), UPPER_BOUNDS = new Scalar(112, 255, 255);
+			LOWER_BOUNDS = new Scalar(65, 119, 154), UPPER_BOUNDS = new Scalar(158, 255, 255);
 
 	public static final Size resize = new Size(320, 240);
 
@@ -38,10 +38,10 @@ public class TowerTracker {
 	public static Mat matHeirarchy = new Mat();
 
 	public static final int TOP_TARGET_HEIGHT = 97;
-	public static final int TOP_CAMERA_HEIGHT = 12; // 12 inches on the robot.
+	public static final int TOP_CAMERA_HEIGHT = 12;
 	public static final double VERTICAL_FOV = 51;
 	public static final double HORIZONTAL_FOV = 67;
-	public static final double CAMERA_ANGLE = 20; // 15 degrees on the robot.
+	public static final double CAMERA_ANGLE = 28; // 15 degrees on the robot.
 
 	public static boolean shouldRun = true;
 	long startTime = 0;
@@ -57,8 +57,9 @@ public class TowerTracker {
 	}
 
 	private static void initializeNetworkTables() {
+		String rioIP = "10.50.33.75";
 		NetworkTable.setClientMode();
-		NetworkTable.setIPAddress("roborio-5033-frc.local");
+		NetworkTable.setIPAddress(rioIP);
 		table = NetworkTable.getTable("SmartDashboard");
 
 		while (!table.isConnected()) {
@@ -73,12 +74,14 @@ public class TowerTracker {
 	}
 
 	private static void openVideoCapture() {
-		videoCapture.open("http://axis-camera.local/mjpg/video.mjpg");
+		String camIP = "http://axis-camera.local/mjpg/video.mjpg";
+		videoCapture.open(camIP);
 
 		while (!videoCapture.isOpened()) {
 			try {
 				System.out.println("no camera connection");
 				Thread.sleep(250);
+				videoCapture.open(camIP);
 			} catch (InterruptedException ex) {
 				Thread.currentThread().interrupt();
 			}
@@ -113,8 +116,6 @@ public class TowerTracker {
 
 		contours.clear();
 		videoCapture.read(matOriginal);
-		// matOriginal = Imgcodecs.imread("C:\\Users\\Curtis
-		// Johnston\\Documents\\LabVIEW Data\\0.jpg");
 		Imgproc.cvtColor(matOriginal, matHSV, Imgproc.COLOR_BGR2HSV);
 		Core.inRange(matHSV, LOWER_BOUNDS, UPPER_BOUNDS, matThresh);
 		Imgproc.findContours(matThresh, contours, matHeirarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
