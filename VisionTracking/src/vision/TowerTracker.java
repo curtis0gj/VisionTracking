@@ -41,7 +41,7 @@ public class TowerTracker {
 	public static final int TOP_CAMERA_HEIGHT = 12;
 	public static final double VERTICAL_FOV = 51;
 	public static final double HORIZONTAL_FOV = 67;
-	public static final double CAMERA_ANGLE = 28; // 15 degrees on the robot.
+	public static final double CAMERA_ANGLE = 28;
 
 	public static boolean shouldRun = true;
 	long startTime = 0;
